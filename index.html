@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f7">
+  <title>สลิปเงินเดือน · แปลงไฟล์จากระบบกลาง</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23172d38'/%3E%3Cpath d='M20 14h24v36l-6-4-6 4-6-4-6 4Z' fill='none' stroke='%239fd8bd' stroke-width='3'/%3E%3Cpath d='M26 24h12M26 31h12M26 38h8' stroke='%239fd8bd' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./vendor/exceljs.min.js"></script>
+  <script defer src="./vendor/pdf-lib.min.js"></script>
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M9 4h14v24l-3.5-2.5L16 28l-3.5-2.5L9 28Z"/><path d="M13 10h6m-6 5h6m-6 5h4"/></svg></span><div><strong>สลิปเงินเดือน</strong></div></div>
+      <div class="local-note">ประมวลผลบนเครื่องของคุณ</div>
+    </header>
+    <main>
+      <div class="page-heading"><div><h1>เตรียมสลิปเงินเดือน</h1><p>นำเข้าไฟล์จากระบบกลาง แล้วเลือกพิมพ์หรือบันทึกไฟล์</p></div><div class="format-tag">A4 แนวนอน<span>3 คนต่อแผ่น</span></div></div>
+      <div class="workspace">
+        <aside class="setup-column">
+          <section class="card setup-card" aria-labelledby="setup-title">
+            <div class="card-title"><h2 id="setup-title">ข้อมูลสำหรับสลิป</h2></div>
+            <form id="import-form">
+              <label class="field-label" for="file">ไฟล์เงินเดือน</label>
+              <label class="dropzone" id="dropzone" for="file">
+                <svg class="upload-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M19 4H8a2 2 0 0 0-2 2v20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V11Z"/><path d="M19 4v7h7m-10 12V13m-4 4 4-4 4 4"/></svg>
+                <span id="file-name">กดที่นี่เพื่อเลือกไฟล์ Excel</span><small id="file-meta">เลือกไฟล์ .xlsx จากระบบกลาง</small>
+                <input id="file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+              </label>
+              <label class="field-label payer-label" for="payer">ชื่อผู้จ่ายเงิน</label>
+              <input class="text-input" id="payer" name="payer" type="text" maxlength="120" placeholder="ระบุคำนำหน้า ชื่อ และนามสกุล" autocomplete="off" aria-describedby="payer-help">
+              <p class="field-help" id="payer-help">พิมพ์คำนำหน้า ชื่อ และนามสกุล ชื่อจะอยู่ใต้ลายเซ็น</p>
+              <button class="button primary generate-button" id="generate" type="submit" disabled>สร้างสลิปเงินเดือน</button>
+              <div class="progress" id="progress" hidden><p id="progress-label" role="status" aria-live="polite"></p><progress id="progress-bar" max="100" value="0"></progress><button class="text-button" id="cancel" type="button" hidden>ยกเลิก</button></div>
+            </form>
+            <div class="setup-footnote"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 9V6a5 5 0 0 1 10 0v3M4 9h12v9H4Z"/></svg><p>ไฟล์และข้อมูลเงินเดือนประมวลผลในเบราว์เซอร์ ไม่ส่งขึ้นเซิร์ฟเวอร์</p></div>
+          </section>
+          <section class="error-panel" id="error" role="alert" hidden><strong id="error-title"></strong><ul id="error-list"></ul></section>
+          <section class="card results-card" id="results" hidden aria-labelledby="results-title">
+            <div class="card-title"><h2 id="results-title">ข้อมูลที่อ่านได้</h2><button class="text-button" id="reset" type="button">เริ่มใหม่</button></div>
+            <div class="stats"><div><strong id="people-count">0</strong><span>คน</span></div><div><strong id="group-count">0</strong><span>กลุ่ม / ชีต</span></div><div><strong id="page-count">0</strong><span>หน้า</span></div></div>
+            <div class="net-summary"><span>รวมเงินรับสุทธิ</span><strong><span id="net-total">0.00</span> <small>บาท</small></strong></div>
+            <details class="groups"><summary>ดูจำนวนคนแยกตามชีต</summary><div id="group-list"></div></details>
+            <div id="warnings" class="warnings" hidden></div>
+          </section>
+          <div class="small-note">เริ่มแผ่นใหม่เมื่อเปลี่ยนชีต<br>หากไม่ครบ 3 คน ช่องที่เหลือจะเว้นว่าง</div>
+        </aside>
+        <section class="card preview-card" aria-labelledby="preview-title">
+          <div class="preview-header"><div><h2 id="preview-title">ตัวอย่างสลิป</h2><p>ตรวจรายชื่อและยอดเงินก่อนพิมพ์</p></div></div>
+          <div class="preview-toolbar"><select id="page-select" aria-label="เลือกหน้าตัวอย่าง" disabled><option>ยังไม่มีสลิป</option></select><div class="page-nav"><button type="button" id="previous" class="icon-button" aria-label="หน้าก่อนหน้า" disabled>ก่อนหน้า</button><span id="page-counter" aria-live="polite">ยังไม่มีเอกสาร</span><button type="button" id="next" class="icon-button" aria-label="หน้าถัดไป" disabled>ถัดไป</button></div></div>
+          <div class="preview-stage">
+            <div class="empty-preview" id="empty-preview"><div class="paper-outline" aria-hidden="true"><div></div><div></div><div></div></div><h3>สลิปจะแสดงตรงนี้</h3><p>เลือกไฟล์และใส่ชื่อผู้จ่ายเงิน<br>แล้วกด “สร้างสลิปเงินเดือน”</p></div>
+            <img id="preview-image" class="preview-image" alt="" hidden>
+          </div>
+          <div class="export-panel"><div><h3>พิมพ์และบันทึก</h3><p>Excel สำหรับแก้ไขต่อ · PDF สำหรับเก็บหรือส่งต่อ</p></div><div class="export-buttons"><button type="button" id="print" class="button print-button" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 7V2h10v5M5 15H2V7h16v8h-3M5 12h10v6H5Z"/></svg>พิมพ์สลิป</button><button type="button" id="export-excel" class="button secondary" disabled>บันทึกเป็น Excel</button><button type="button" id="export-pdf" class="button secondary" disabled>บันทึกเป็น PDF</button></div><p id="export-status" class="export-status" role="status" aria-live="polite"></p></div>
+          <p class="print-help">พิมพ์เป็น A4 แนวนอน ขนาดจริง (100%) และปิดหัว–ท้ายกระดาษของเบราว์เซอร์ เพื่อคงรูปแบบตามตัวอย่าง</p>
+        </section>
+      </div>
+    </main>
+    <footer class="site-footer"><span>เครื่องมือทำสลิปเงินเดือน</span><span>ไฟล์ต้นฉบับของคุณไม่ถูกแก้ไข</span></footer>
+    <dialog id="busy-dialog" class="busy-dialog" aria-labelledby="busy-title" hidden>
+      <div class="busy-spinner" aria-hidden="true"></div>
+      <h2 id="busy-title">กำลังสร้างไฟล์</h2>
+      <p id="busy-text" role="status" aria-live="polite">กำลังเตรียมข้อมูล</p>
+      <progress id="busy-progress" max="100" value="0"></progress>
+      <p id="busy-elapsed" class="busy-elapsed">กรุณารอ ไม่ต้องกดปุ่มซ้ำ</p>
+    </dialog>
+  </div>
+  <div id="print-pages" aria-hidden="true"></div>
+</body>
+</html>

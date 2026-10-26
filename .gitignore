@@ -1,0 +1,46 @@
+node_modules/
+.test-output/
+*.log
+*.md
+.md
+# Imported payroll and generated documents (never commit employee data).
+outputs/
+exports/
+uploads/
+tmp/
+temp/
+*.xls
+*.xlsx
+*.xlsm
+*.xlsb
+*.csv
+*.tsv
+*.pdf
+*.doc
+*.docx
+*.zip
+*.bak
+~$*
+# Secrets and local credentials.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+credentials.*.json
+service-account*.json
+.npmrc
+.netrc
+.aws/
+.ssh/
+.codex/
+.agents/
+# Local editor and OS files.
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
