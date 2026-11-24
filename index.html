@@ -31,8 +31,10 @@
                 <input id="file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
               </label>
               <label class="field-label payer-label" for="payer">ชื่อผู้จ่ายเงิน</label>
-              <input class="text-input" id="payer" name="payer" type="text" maxlength="120" placeholder="ระบุคำนำหน้า ชื่อ และนามสกุล" autocomplete="off" aria-describedby="payer-help">
-              <p class="field-help" id="payer-help">พิมพ์คำนำหน้า ชื่อ และนามสกุล ชื่อจะอยู่ใต้ลายเซ็น</p>
+              <input class="text-input" id="payer" name="payer" type="text" maxlength="120" placeholder="ระบุคำนำหน้า ชื่อ และนามสกุล" autocomplete="off" required aria-describedby="payer-help">
+              <label class="field-label" for="position" style="margin-top:18px">ตำแหน่ง</label>
+              <input class="text-input" id="position" name="position" type="text" maxlength="120" placeholder="ระบุตำแหน่ง" autocomplete="off" required aria-describedby="payer-help">
+              <p class="field-help" id="payer-help">ชื่อและตำแหน่งจะอยู่ใต้ลายเซ็น</p>
               <button class="button primary generate-button" id="generate" type="submit" disabled>สร้างสลิปเงินเดือน</button>
               <div class="progress" id="progress" hidden><p id="progress-label" role="status" aria-live="polite"></p><progress id="progress-bar" max="100" value="0"></progress><button class="text-button" id="cancel" type="button" hidden>ยกเลิก</button></div>
             </form>
@@ -52,7 +54,7 @@
           <div class="preview-header"><div><h2 id="preview-title">ตัวอย่างสลิป</h2><p>ตรวจรายชื่อและยอดเงินก่อนพิมพ์</p></div></div>
           <div class="preview-toolbar"><select id="page-select" aria-label="เลือกหน้าตัวอย่าง" disabled><option>ยังไม่มีสลิป</option></select><div class="page-nav"><button type="button" id="previous" class="icon-button" aria-label="หน้าก่อนหน้า" disabled>ก่อนหน้า</button><span id="page-counter" aria-live="polite">ยังไม่มีเอกสาร</span><button type="button" id="next" class="icon-button" aria-label="หน้าถัดไป" disabled>ถัดไป</button></div></div>
           <div class="preview-stage">
-            <div class="empty-preview" id="empty-preview"><div class="paper-outline" aria-hidden="true"><div></div><div></div><div></div></div><h3>สลิปจะแสดงตรงนี้</h3><p>เลือกไฟล์และใส่ชื่อผู้จ่ายเงิน<br>แล้วกด “สร้างสลิปเงินเดือน”</p></div>
+            <div class="empty-preview" id="empty-preview"><div class="paper-outline" aria-hidden="true"><div></div><div></div><div></div></div><h3>สลิปจะแสดงตรงนี้</h3><p>เลือกไฟล์และใส่ชื่อผู้จ่ายเงินกับตำแหน่ง<br>แล้วกด “สร้างสลิปเงินเดือน”</p></div>
             <img id="preview-image" class="preview-image" alt="" hidden>
           </div>
           <div class="export-panel"><div><h3>พิมพ์และบันทึก</h3><p>Excel สำหรับแก้ไขต่อ · PDF สำหรับเก็บหรือส่งต่อ</p></div><div class="export-buttons"><button type="button" id="print" class="button print-button" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 7V2h10v5M5 15H2V7h16v8h-3M5 12h10v6H5Z"/></svg>พิมพ์สลิป</button><button type="button" id="export-excel" class="button secondary" disabled>บันทึกเป็น Excel</button><button type="button" id="export-pdf" class="button secondary" disabled>บันทึกเป็น PDF</button></div><p id="export-status" class="export-status" role="status" aria-live="polite"></p></div>

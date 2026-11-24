@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import * as XLSX from '../vendor/xlsx.mjs';
 import { toCents, money, keyOf } from '../src/catalog.js';
 import { parseWorkbook, ImportError } from '../src/parser.js';
-import { buildDocument, cleanPayer } from '../src/model.js';
+import { buildDocument, cleanPayer, cleanPosition } from '../src/model.js';
+import { buildRows, signatureGeometry } from '../src/renderer.js';
 
 function source({ names = ['คุณทดสอบ หนึ่ง'], noDeductions = false, badNet = false, invalid = false, shift = 0 } = {}) {
   const pad = row => [...Array(shift).fill(null), ...row];
@@ -40,14 +41,28 @@ test('invalid values and totals fail with sheet and source row details', () => {
 test('pages start over at each existing sheet and do not duplicate names in unused slots', () => {
   const wb=source({names:['คนที่หนึ่ง','คนที่สอง','คนที่สาม','คนที่สี่']});
   const second=source({names:['อีกกลุ่ม']}); XLSX.utils.book_append_sheet(wb,second.Sheets[second.SheetNames[0]],'อีกงาน');
-  const doc=buildDocument(parseWorkbook(wb),'นายทดสอบ ผู้จ่าย');
+  const doc=buildDocument(parseWorkbook(wb),'นายทดสอบ ผู้จ่าย','ผู้อำนวยการกองคลัง');
   assert.deepEqual(doc.pages.map(p=>p.employees.length),[3,1,1]);
   assert.equal(doc.people,5); assert.equal(doc.pages[2].group,'อีกงาน'); assert.equal(doc.payer,'นายทดสอบ ผู้จ่าย');
+  assert.equal(doc.position,'ผู้อำนวยการกองคลัง');
   assert.equal(cleanPayer(' ( นายทดสอบ ผู้จ่าย ) '),'นายทดสอบ ผู้จ่าย');
   assert.throws(()=>cleanPayer(' '));
+  assert.equal(cleanPosition(' ผู้อำนวยการกองคลัง '),'ผู้อำนวยการกองคลัง');
+  assert.throws(()=>cleanPosition(' '));
 });
 test('unknown income/deduction headings remain in the document catalog', () => {
   const parsed=parseWorkbook(source()); parsed.groups[0].employees[0].deductions.push({key:'new',label:'รายการใหม่',display:'รายการใหม่',cents:0});
-  const doc=buildDocument(parsed,'ผู้จ่าย'); assert.ok(doc.deductions.some(c=>c.key==='new'));
+  const doc=buildDocument(parsed,'ผู้จ่าย','ผู้อำนวยการ'); assert.ok(doc.deductions.some(c=>c.key==='new'));
+});
+test('position follows the parenthesized payer name at single-line spacing', () => {
+  const doc=buildDocument(parseWorkbook(source()),'ผู้จ่าย','ผู้อำนวยการ');
+  const rows=buildRows(doc);
+  assert.deepEqual(rows.slice(-3).map(row=>[row.kind,row.height]),[['signature',24],['payer',22],['position',16]]);
+});
+test('position can use the full slip width rather than only the signature dots', () => {
+  const ctx={font:'',measureText:value=>({width:value.length*5})};
+  const signature=signatureGeometry(ctx,'ผู้จ่าย',300);
+  assert.deepEqual([signature.positionStart,signature.positionEnd],[0,300]);
+  assert.ok(signature.end-signature.start<signature.positionEnd-signature.positionStart);
 });
 

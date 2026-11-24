@@ -5,7 +5,7 @@ import { renderDocument, releasePages } from './renderer.js';
 import { createPdf, createExcel, downloadBlob, fileBase, preparePrint, openPrintDialog } from './exporters.js';
 
 const $ = id => document.getElementById(id);
-const elements = Object.fromEntries(['file','payer','generate','dropzone','file-name','file-meta','error','error-title','error-list','progress','progress-label','progress-bar','results','empty-preview','preview-image','page-select','page-counter','previous','next','export-pdf','export-excel','print','print-pages','people-count','group-count','page-count','net-total','group-list','warnings','export-status','cancel','reset','busy-dialog','busy-title','busy-text','busy-progress','busy-elapsed'].map(id => [id,$(id)]));
+const elements = Object.fromEntries(['file','payer','position','generate','dropzone','file-name','file-meta','error','error-title','error-list','progress','progress-label','progress-bar','results','empty-preview','preview-image','page-select','page-counter','previous','next','export-pdf','export-excel','print','print-pages','people-count','group-count','page-count','net-total','group-list','warnings','export-status','cancel','reset','busy-dialog','busy-title','busy-text','busy-progress','busy-elapsed'].map(id => [id,$(id)]));
 let file = null, doc = null, pages = [], pageIndex = 0, controller = null, busy = false, exporting = false;
 const yieldUI = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -22,11 +22,12 @@ function showError(error) {
 }
 function clearError() { elements.error.hidden = true; elements['error-list'].replaceChildren(); }
 function refreshButtons() {
-  elements.generate.disabled = !file || !elements.payer.value.trim() || busy || exporting;
+  elements.generate.disabled = !file || !elements.payer.value.trim() || !elements.position.value.trim() || busy || exporting;
   for (const id of ['export-pdf','export-excel','print']) elements[id].disabled = !pages.length || busy || exporting;
   elements.cancel.hidden = !busy;
   elements.file.disabled = busy || exporting;
   elements.payer.disabled = busy || exporting;
+  elements.position.disabled = busy || exporting;
   elements.reset.disabled = busy || exporting;
 }
 function discard() {
@@ -93,7 +94,7 @@ async function generate(event) {
   try {
     await yieldUI();
     const imported = readPayroll(await file.arrayBuffer()); signal.throwIfAborted();
-    doc = buildDocument(imported, elements.payer.value);
+    doc = buildDocument(imported, elements.payer.value, elements.position.value);
     pages = await renderDocument(doc, { signal, onProgress: (current, total) => {
       elements['progress-label'].textContent = `กำลังสร้างสลิป ${current} / ${total} หน้า`;
       elements['progress-bar'].value = current / total * 100;
@@ -151,9 +152,10 @@ async function exportFile(type) {
 
 elements.file.addEventListener('change', () => selectFile(elements.file.files[0]));
 elements.payer.addEventListener('input', () => { if (pages.length) discard(); clearError(); refreshButtons(); });
+elements.position.addEventListener('input', () => { if (pages.length) discard(); clearError(); refreshButtons(); });
 $('import-form').addEventListener('submit', generate);
 elements.cancel.addEventListener('click', () => controller?.abort());
-elements.reset.addEventListener('click', () => { selectFile(null); elements.file.value = ''; elements.payer.value = ''; refreshButtons(); elements.file.focus(); });
+elements.reset.addEventListener('click', () => { selectFile(null); elements.file.value = ''; elements.payer.value = ''; elements.position.value = ''; refreshButtons(); elements.file.focus(); });
 elements['export-pdf'].addEventListener('click', () => exportFile('pdf'));
 elements['export-excel'].addEventListener('click', () => exportFile('xlsx'));
 elements.print.addEventListener('click', () => { if (pages.length && !busy && !exporting) openPrintDialog(); });

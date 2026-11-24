@@ -63,7 +63,7 @@ export function signatureGeometry(ctx, payer, panelWidth = PANEL) {
   const left = (panelWidth - lineWidth) / 2;
   const start = left + ctx.measureText(prefix).width;
   const end = left + ctx.measureText(prefix + dots).width;
-  return { line, name, center: (start + end) / 2, start, end, lineLeft: left, lineWidth, nameWidth };
+  return { line, name, center: (start + end) / 2, start, end, positionStart: 0, positionEnd: panelWidth, lineLeft: left, lineWidth, nameWidth };
 }
 
 export function wrapLabel(ctx, value, width = LABEL - 4) {
@@ -105,7 +105,7 @@ export function buildRows(doc, ctx, labelWidth = LABEL) {
     ...doc.deductions.map(c => itemRow('deductions', c)),
     { kind: 'total', title: 'รวมรายการหัก', field: 'deducted', height: 22 }, { kind: 'blank', height: 5 },
     { kind: 'net', title: 'เงินรับสุทธิ (บาท)', field: 'net', height: 27 }, { kind: 'blank', height: 20 },
-    { kind: 'signature', height: 24 }, { kind: 'payer', height: 22 },
+    { kind: 'signature', height: 24 }, { kind: 'payer', height: 22 }, { kind: 'position', height: 16 },
   ];
   return rows;
 }
@@ -173,6 +173,7 @@ export function drawPage(canvas, doc, page, dpi = PAGE.dpi) {
       }
       if (row.kind === 'signature') text(ctx, signature.line, x, y, PANEL, h, { align: 'center' });
       if (row.kind === 'payer') text(ctx, signature.name, x + signature.center - (signature.end - signature.start) / 2 - 4, y, signature.end - signature.start + 8, h, { align: 'center' });
+      if (row.kind === 'position') text(ctx, doc.position, x + signature.positionStart, y, signature.positionEnd - signature.positionStart, h, { align: 'center' });
       y += h;
     }
   });

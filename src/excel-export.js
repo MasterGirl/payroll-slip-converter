@@ -79,6 +79,8 @@ export async function createExcel(doc, onProgress = () => {}, onPhase = () => {}
           merged(r, start, end, signature.line, 'center');
         } else if (row.kind === 'payer') {
           merged(r, start + payerStart, start + payerEnd, signature.name, 'center');
+        } else if (row.kind === 'position') {
+          merged(r, start, end, doc.position, 'center');
         } else {
           merged(r, start, start + labelEnd, row.kind === 'item' ? row.lines.join('\n') : row.title);
           let value;
